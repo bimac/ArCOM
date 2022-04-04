@@ -1,6 +1,6 @@
 {
     "name": "ArCOM",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "description": "An interface to simplify data transactions between Arduino and MATLAB/GNU Octave",
     "keywords": "ArCOM, Bpod, Arduino, MATLAB, Octave, Python",
     "repository":
@@ -8,14 +8,19 @@
       "type": "git",
       "url": "https://github.com/sanworks/ArCOM.git"
     },
-    "build": {
+    "build":
+    {
         "srcDir": "Arduino/src"
     },
     "authors":
     [
       {
-        "name": "Josh Sanders",
+        "name": "Sanworks LLC, Sound Beach, New York, USA",
         "url": "https://www.sanworks.io"
+      }
+      {
+        "name": "Florian Rau",
+        "url": "https://github.com/bimac"
       }
     ],
     "license": "GPLv3",
