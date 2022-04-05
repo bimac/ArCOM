@@ -50,31 +50,45 @@
 
 classdef ArCOMObject < handle
     properties
-        Port = []
-        baudRate
+        baudRate                % Baud rate for serial transmission
+    end
+
+    properties (Hidden)
+        Port = []               % Port object
     end
 
     properties (Dependent)
-        bytesAvailable
+        bytesAvailable          % Number of bytes available for reading
     end
 
     properties (Access = private)
+        isLittleEndian          % Are we using little-endian byte ordering?
+        isOctave                % Are we using GNU/Octave?
+        hasPsychToolbox         % Is PsychToolbox available?
         Interface = 0
-        validDataTypes = {'int8','uint8','char','int16','uint16',...
+        validDataTypes = ...    % List of supported data-types
+            {'int8','uint8','char','int16','uint16',...
             'int32','uint32','int64','uint64','logical','single','double'};
-        inputBuffer = 1E5;
-        outputBuffer = 1E5;
-        timeout = 1;
-        writeFcn
-        readFcn
-        flushFcn
-        getBytesAvailableFcn
+        inputBuffer = 1E5;      % Size of input buffer
+        outputBuffer = 1E5;     % Size of output buffer
+        timeout = 1;            % Serial timeout in seconds
+        writeFcn                % Anonymous function: write data
+        readFcn                 % Anonymous function: read data
+        flushFcn                % Anonymous function: flush serial port
+        getBytesAvailableFcn    % Anonymous function: get available bytes
     end
 
     methods
         function obj = ArCOMObject(portString, baudRate, forceOption)
 
-            if obj.UseOctave
+            % Obtain information on the current system
+            [~,~,tmp] = computer;
+            obj.isLittleEndian = strcmp(tmp,'L');
+            obj.isOctave = exist('OCTAVE_VERSION', 'builtin') > 0;
+            obj.hasPsychToolbox = exist('PsychtoolboxVersion', 'file') > 0;
+
+            % Prepare things for GNU/Octave
+            if obj.isOctave
                 % Load Instrument Control Toolbox
                 tmp = ver('instrument-control');
                 assert(~isempty(tmp),['Please install the instrument ' ...
@@ -89,7 +103,7 @@ classdef ArCOMObject < handle
                 warning('off', 'Octave:num-to-str');
             end
 
-            % try to guess portString / validate argument
+            % Try to guess portString / validate argument
             if ~exist('portString','var') || isempty(portString)
                 if exist('serialportlist','file')
                     tmp = serialportlist('available');
@@ -105,7 +119,7 @@ classdef ArCOMObject < handle
                     {'row'},'','PORTSTRING')
             end
 
-            % validate baudRate argument
+            % Validate baudRate argument
             if ~exist('baudRate','var') || isempty(baudRate)
                 obj.baudRate = 9600;
             else
@@ -114,7 +128,7 @@ classdef ArCOMObject < handle
                 obj.baudRate = baudRate;
             end
 
-            % validate manual choice of interface
+            % Validate manual choice of interface
             if exist('forceOption','var')
                 forceOption = validatestring(lower(forceOption),...
                     {'java','psychtoolbox'},'','FORCEOPTION');
@@ -122,10 +136,10 @@ classdef ArCOMObject < handle
                 forceOption = '';
             end
 
-            % pick serial interface
-            if obj.UsePsychToolbox && ~strcmp(forceOption,'java')
+            % Pick serial interface
+            if obj.hasPsychToolbox && ~strcmp(forceOption,'java')
                 obj.Interface = 1;      % PsychToolbox interface
-            elseif obj.UseOctave
+            elseif obj.isOctave
                 tmp = instrhwinfo().SupportedInterfaces;
                 if ~isempty(strfind(tmp,'serialport')) %#ok<*STREMP>
                     obj.Interface = 3;  % Octave serialport interface
@@ -142,7 +156,7 @@ classdef ArCOMObject < handle
                 end
             end
 
-            % initialize serial interface
+            % Initialize serial interface
             switch obj.Interface
                 case 0  % MATLAB (deprecated serial interface)
                     obj.Port = serial(portString, ...
@@ -218,7 +232,12 @@ classdef ArCOMObject < handle
                 types = obj.parseTypes(varargin(2:2:end));
             end
 
-            % cast data to uint8 & write to serial
+            % Ensure data is sent little-endian
+            if ~obj.isLittleEndian
+                data = cellfun(@(x) {swapbytes(x)},data);
+            end
+
+            % Cast data to uint8 & write to serial
             for ii = 1:numel(data)
                 type = types{ii};
                 if ~isempty(strfind(type,'int'))
@@ -235,7 +254,7 @@ classdef ArCOMObject < handle
             end
             obj.writeFcn([data{:}]);
 
-            % local function for checking range & casting
+            % Local function for checking range & casting
             function out = OORcast(in,type,typeMin,typeMax)
                 isOOR = in<typeMin | in>typeMax;
                 assert(all(~isOOR),['Value %d is out of range for data '...
@@ -285,6 +304,11 @@ classdef ArCOMObject < handle
                         varargout{ii} = typecast(data(i0(ii):i1(ii)),types{ii});
                 end
             end
+
+            % Ensure endianness
+            if ~obj.isLittleEndian
+                varargout = cellfun(@(x) {swapbytes(x)},varargout);
+            end
         end
 
         function delete(obj)
@@ -303,7 +327,7 @@ classdef ArCOMObject < handle
         end
 
         function close(obj)
-            if obj.UseOctave
+            if obj.isOctave
                 obj.delete;
             end
             evalin('caller', ['clear ' inputname(1)])
@@ -322,24 +346,6 @@ classdef ArCOMObject < handle
             valid = ismember(out,obj.validDataTypes);
             assert(all(valid),['Data type ''%s'' is not currently ' ...
                 'supported by ArCOM.'],out{find(~valid,1)})
-        end
-    end
-
-    methods (Static, Access = private)
-        function out = UseOctave()
-            persistent a;
-            if (isempty(a))
-                a = exist('OCTAVE_VERSION', 'builtin') > 0;
-            end
-            out = a;
-        end
-
-        function out = UsePsychToolbox()
-            persistent a;
-            if (isempty(a))
-                a = exist('PsychtoolboxVersion', 'file') > 0;
-            end
-            out = a;
         end
     end
 end
