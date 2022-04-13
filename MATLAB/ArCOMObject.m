@@ -108,7 +108,14 @@ classdef ArCOMObject < handle
                 if exist('serialportlist','file')
                     tmp = serialportlist('available');
                 elseif exist('seriallist','file')
-                    tmp = seriallist; %#ok<SERLL>
+                    if obj.isOctave
+                        tmp = seriallist;
+                        if isunix && ~isempty(tmp) && ~exist(tmp{1},'file')
+                            tmp = strcat('/dev/',seriallist);
+                        end
+                    else
+                        tmp = seriallist('available');
+                    end
                 else
                     tmp = [];
                 end
@@ -117,6 +124,10 @@ classdef ArCOMObject < handle
             else
                 validateattributes(portString,{'char','string'},...
                     {'row'},'','PORTSTRING')
+            end
+            if isunix
+                assert(exist(portString,'file')>0,...
+                    '''%s'' is not a valid serial port',portString)
             end
 
             % Validate baudRate argument
@@ -141,9 +152,9 @@ classdef ArCOMObject < handle
                 obj.Interface = 1;      % PsychToolbox interface
             elseif obj.isOctave
                 tmp = instrhwinfo().SupportedInterfaces;
-                if ~isempty(strfind(tmp,'serialport')) %#ok<*STREMP>
+                if any(~cellfun(@isempty,strfind(tmp,'serialport'))) %#ok<STRCLFH>
                     obj.Interface = 3;  % Octave serialport interface
-                elseif ~isempty(strfind(tmp,'serial'))
+                elseif any(~cellfun(@isempty,strfind(tmp,'serial'))) %#ok<STRCLFH>
                     obj.Interface = 2;  % Octave serial interface
                 else
                     error('Serial communication is not supported on your platform.');
@@ -240,7 +251,7 @@ classdef ArCOMObject < handle
             % Cast data to uint8 & write to serial
             for ii = 1:numel(data)
                 type = types{ii};
-                if ~isempty(strfind(type,'int'))
+                if ~isempty(strfind(type,'int')) %#ok<STREMP>
                     data{ii} = OORcast(data{ii},type,intmin(type),intmax(type));
                     data{ii} = typecast(data{ii},'uint8');
                 elseif ismember(type,'char')
