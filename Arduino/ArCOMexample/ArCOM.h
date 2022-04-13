@@ -27,12 +27,8 @@ inline auto alias(Args&&... args) -> decltype(target(std::forward<Args>(args)...
   return target(std::forward<Args>(args)...); \
 }
 
-
 class ArCOM
 {
-protected:
-
-
 public:
 
   // Constructor
