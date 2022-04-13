@@ -106,15 +106,16 @@ classdef ArCOMObject < handle
             % Try to guess portString / validate argument
             if ~exist('portString','var') || isempty(portString)
                 if exist('serialportlist','file')
-                    tmp = serialportlist('available');
+                    tmp = sort(serialportlist('available'));
                 elseif exist('seriallist','file')
                     if obj.isOctave
-                        tmp = seriallist;
-                        if isunix && ~isempty(tmp) && ~exist(tmp{1},'file')
+                        if isunix
                             tmp = strcat('/dev/',seriallist);
+                        else
+                            tmp = seriallist;
                         end
                     else
-                        tmp = seriallist('available');
+                        tmp = sort(seriallist('available'));
                     end
                 else
                     tmp = [];
@@ -328,12 +329,12 @@ classdef ArCOMObject < handle
                     if ~isempty(obj.Port) && isvalid(obj.Port)
                         fclose(obj.Port);
                     end
+                case 1
+                    IOPort('Close', obj.Port);
                 case 2
                     if ~isempty(obj.Port)
                         obj.Port.close;
                     end
-                case 1
-                    IOPort('Close', obj.Port);
             end
         end
 
