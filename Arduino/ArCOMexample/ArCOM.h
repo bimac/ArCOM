@@ -35,52 +35,29 @@ protected:
 
 public:
 
-
   // Constructor
   ArCOM(Stream &s);
+
   // Serial functions
   unsigned int available();
   void flush();
 
-
-  // Unsigned integers
-  void writeByteArray(byte numArray[], unsigned int size);
-  void writeUint8Array(byte numArray[], unsigned int size);
-  void writeCharArray(char charArray[], unsigned int size);
-  void writeUint16Array(unsigned short numArray[], unsigned int size);
-  void writeUint32Array(unsigned long numArray[], unsigned int size);
-  void readByteArray(byte numArray[], unsigned int size);
-  void readUint8Array(byte numArray[], unsigned int size);
-  void readCharArray(char charArray[], unsigned int size);
-  void readUint16Array(unsigned short numArray[], unsigned int size);
-  void readUint32Array(unsigned long numArray[], unsigned int size);
-
-  // Signed integers
-  void writeInt8Array(int8_t numArray[], unsigned int size);
-  void writeInt16Array(int16_t numArray[], unsigned int size);
-  void writeInt32Array(int32_t numArray[], unsigned int size);
-  void readInt8Array(int8_t numArray[], unsigned int size);
-  void readInt16Array(int16_t numArray[], unsigned int size);
-  void readInt32Array(int32_t numArray[], unsigned int size);
-
-  template<typename T>
-  void write(T data) {
+  // Template: Write scalar
+  template<typename T> void write(T data) {
     buffer <T>buf;
     buf.data = data;
     for (size_t i = 0; i<sizeof(T); i++)
       Serial.write(buf.bytes[i]);
   }
 
-  // template<typename T>
-  // void write(T data, uint8_t n) {
-  //   buffer <T>buf;
-  //   buf.data = data;
-  //   for (size_t i = 0; i<sizeof(T); i++)
-  //     Serial.write(buf.bytes[i]);
-  // }
+  // Template: Write array
+  template<typename T> void write(T *data, size_t nValues) {
+    for (uint16_t i = 0; i < nValues; i++)
+      write<T>(data[i]);
+  }
 
-  template<typename T>
-  T read() {
+  // Template: Read scalar
+  template<typename T> T read() {
     buffer <T>buf;
     for (size_t i = 0; i<sizeof(T); i++) {
       while (ArCOMstream->available() == 0) {}
@@ -89,47 +66,72 @@ public:
     return buf.data;
   }
 
-  // Generate wrapper functions for backwards-compatibility
-  ALIAS(readByte,    read<uint8_t>)
-  ALIAS(readUint8,   read<uint8_t>)
-  ALIAS(readUint16,  read<uint16_t>)
-  ALIAS(readUint32,  read<uint32_t>)
-  ALIAS(readUint64,  read<uint64_t>)
-  ALIAS(readChar,    read<signed char>)
-  ALIAS(readInt8,    read<int8_t>)
-  ALIAS(readInt16,   read<int16_t>)
-  ALIAS(readInt32,   read<int32_t>)
-  ALIAS(readInt64,   read<int64_t>)
-  ALIAS(readFloat,   read<float>)
-  ALIAS(readDouble,  read<double>)
-  ALIAS(writeByte,   write<uint8_t>)
-  ALIAS(writeUint8,  write<uint8_t>)
-  ALIAS(writeUint16, write<uint16_t>)
-  ALIAS(writeUint32, write<uint32_t>)
-  ALIAS(writeUint64, write<uint64_t>)
-  ALIAS(writeChar,   write<signed char>)
-  ALIAS(writeInt8,   write<int8_t>)
-  ALIAS(writeInt16,  write<int16_t>)
-  ALIAS(writeInt32,  write<int32_t>)
-  ALIAS(writeInt64,  write<int64_t>)
-  ALIAS(writeFloat,  write<float>)
-  ALIAS(writeDouble, write<double>)
+  // Template: Read array
+  template<typename T> void read(T *data, size_t nValues) {
+    for (uint16_t i = 0; i < nValues; i++)
+      data[i] = read<T>();
+  }
+
+  // Wrapper functions for backwards-compatibility (read scalar)
+  ALIAS(readByte,         read<uint8_t>)
+  ALIAS(readUint8,        read<uint8_t>)
+  ALIAS(readUint16,       read<uint16_t>)
+  ALIAS(readUint32,       read<uint32_t>)
+  ALIAS(readUint64,       read<uint64_t>)
+  ALIAS(readChar,         read<signed char>)
+  ALIAS(readInt8,         read<int8_t>)
+  ALIAS(readInt16,        read<int16_t>)
+  ALIAS(readInt32,        read<int32_t>)
+  ALIAS(readInt64,        read<int64_t>)
+  ALIAS(readFloat,        read<float>)
+  ALIAS(readDouble,       read<double>)
+
+  // Wrapper functions for backwards-compatibility (read array)
+  ALIAS(readByteArray,    read<uint8_t>)
+  ALIAS(readUint8Array,   read<uint8_t>)
+  ALIAS(readUint16Array,  read<uint16_t>)
+  ALIAS(readUint32Array,  read<uint32_t>)
+  ALIAS(readUint64Array,  read<uint64_t>)
+  ALIAS(readCharArray,    read<signed char>)
+  ALIAS(readInt8Array,    read<int8_t>)
+  ALIAS(readInt16Array,   read<int16_t>)
+  ALIAS(readInt32Array,   read<int32_t>)
+  ALIAS(readInt64Array,   read<int64_t>)
+  ALIAS(readFloatArray,   read<float>)
+  ALIAS(readDoubleArray,  read<double>)
+
+  // Wrapper functions for backwards-compatibility (write scalar)
+  ALIAS(writeByte,        write<uint8_t>)
+  ALIAS(writeUint8,       write<uint8_t>)
+  ALIAS(writeUint16,      write<uint16_t>)
+  ALIAS(writeUint32,      write<uint32_t>)
+  ALIAS(writeUint64,      write<uint64_t>)
+  ALIAS(writeChar,        write<signed char>)
+  ALIAS(writeInt8,        write<int8_t>)
+  ALIAS(writeInt16,       write<int16_t>)
+  ALIAS(writeInt32,       write<int32_t>)
+  ALIAS(writeInt64,       write<int64_t>)
+  ALIAS(writeFloat,       write<float>)
+  ALIAS(writeDouble,      write<double>)
+
+  // Wrapper functions for backwards-compatibility (write array)
+  ALIAS(writeByteArray,   write<uint8_t>)
+  ALIAS(writeUint8Array,  write<uint8_t>)
+  ALIAS(writeUint16Array, write<uint16_t>)
+  ALIAS(writeUint32Array, write<uint32_t>)
+  ALIAS(writeUint64Array, write<uint64_t>)
+  ALIAS(writeCharArray,   write<signed char>)
+  ALIAS(writeInt8Array,   write<int8_t>)
+  ALIAS(writeInt16Array,  write<int16_t>)
+  ALIAS(writeInt32Array,  write<int32_t>)
+  ALIAS(writeInt64Array,  write<int64_t>)
+  ALIAS(writeFloatArray,  write<float>)
+  ALIAS(writeDoubleArray, write<double>)
 
 private:
-  template<typename T>
-  union buffer {
+  template<typename T> union buffer {
     T data;
     uint8_t bytes[sizeof(T)];
   };
-
-  Stream *ArCOMstream; // Stores the interface (Serial, Serial1, SerialUSB, etc.)
-  union {
-    byte byteArray[4];
-    uint16_t uint16;
-    uint32_t uint32;
-    int8_t int8;
-    int16_t int16;
-    int32_t int32;
-} typeBuffer;
-
+  Stream *ArCOMstream;
 };
