@@ -74,7 +74,7 @@ public:
   ALIAS(readUint16,       read<uint16_t>)
   ALIAS(readUint32,       read<uint32_t>)
   ALIAS(readUint64,       read<uint64_t>)
-  ALIAS(readChar,         read<signed char>)
+  ALIAS(readChar,         read<char>)
   ALIAS(readInt8,         read<int8_t>)
   ALIAS(readInt16,        read<int16_t>)
   ALIAS(readInt32,        read<int32_t>)
@@ -88,7 +88,7 @@ public:
   ALIAS(readUint16Array,  read<uint16_t>)
   ALIAS(readUint32Array,  read<uint32_t>)
   ALIAS(readUint64Array,  read<uint64_t>)
-  ALIAS(readCharArray,    read<signed char>)
+  ALIAS(readCharArray,    read<char>)
   ALIAS(readInt8Array,    read<int8_t>)
   ALIAS(readInt16Array,   read<int16_t>)
   ALIAS(readInt32Array,   read<int32_t>)
@@ -102,7 +102,7 @@ public:
   ALIAS(writeUint16,      write<uint16_t>)
   ALIAS(writeUint32,      write<uint32_t>)
   ALIAS(writeUint64,      write<uint64_t>)
-  ALIAS(writeChar,        write<signed char>)
+  ALIAS(writeChar,        write<char>)
   ALIAS(writeInt8,        write<int8_t>)
   ALIAS(writeInt16,       write<int16_t>)
   ALIAS(writeInt32,       write<int32_t>)
@@ -116,7 +116,7 @@ public:
   ALIAS(writeUint16Array, write<uint16_t>)
   ALIAS(writeUint32Array, write<uint32_t>)
   ALIAS(writeUint64Array, write<uint64_t>)
-  ALIAS(writeCharArray,   write<signed char>)
+  ALIAS(writeCharArray,   write<char>)
   ALIAS(writeInt8Array,   write<int8_t>)
   ALIAS(writeInt16Array,  write<int16_t>)
   ALIAS(writeInt32Array,  write<int32_t>)
@@ -131,3 +131,20 @@ private:
   };
   Stream *ArCOMstream;
 };
+
+// #if __SIZEOF_DOUBLE__ == 4
+// //   #include <IEEE754tools.h>
+//   template<> inline double ArCOM::read<double>() {
+//     uint8_t tmp[8] = {};
+//     readUint8Array(tmp,8);
+//     //float data = doublePacked2Float(tmp, LSBFIRST);
+//     float data = M_PI;
+//     return data;
+//   }
+
+//   template<> inline void ArCOM::write<double>(double data) {
+//     uint8_t tmp[8] = {};
+//     //float2DoublePacked((float) data, tmp, LSBFIRST);
+//     writeUint8Array(tmp,8);
+//   }
+// #endif

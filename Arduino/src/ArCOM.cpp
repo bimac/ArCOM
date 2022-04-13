@@ -26,6 +26,6 @@ unsigned int ArCOM::available() {
   return ArCOMstream->available();
 }
 
-inline void ArCOM::flush() {
+void ArCOM::flush() {
   ArCOMstream->flush();
 }
