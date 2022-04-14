@@ -198,7 +198,6 @@ classdef ArCOMObject < handle
                     end
                 end
             end
-            
 
             % Initialize serial interface
             switch obj.Interface
@@ -259,7 +258,6 @@ classdef ArCOMObject < handle
                             obj.BytesAvailableFcnCount,obj.BytesAvailableFcn)
                     end
             end
-
             pause(.2);
             obj.flush;
         end
@@ -269,21 +267,19 @@ classdef ArCOMObject < handle
         end
 
         function out = get.BytesAvailableFcn(obj)
-            out = '';
-            if obj.isMatlabJava('BytesAvailableFcn') && ~isempty(obj.Port)
-                out = obj.Port.BytesAvailableFcn;
-            end
+            assert(~obj.isOctave,   'BytesAvailableFcn is not available with GNU/Octave.')
+            assert(obj.Interface~=1,'BytesAvailableFcn is not available with PsychToolbox.')
+            out = obj.Port.BytesAvailableFcn;
         end
         
         function set.BytesAvailableFcn(obj,in)
-            if obj.isMatlabJava('BytesAvailableFcn')
-                switch obj.Interface
-                    case 0
-                        obj.Port.BytesAvailableFcn = in;
-                    case 3
-                        configureCallback(obj.Port,"byte",...
-                            obj.BytesAvailableFcnCount,in)
-                end
+            assert(~obj.isOctave,   'BytesAvailableFcn is not available with GNU/Octave.')
+            assert(obj.Interface~=1,'BytesAvailableFcn is not available with PsychToolbox.')
+            switch obj.Interface
+                case 0
+                    obj.Port.BytesAvailableFcn = in;
+                case 3
+                    configureCallback(obj.Port,"byte",obj.BytesAvailableFcnCount,in)
             end
         end
         
@@ -419,17 +415,6 @@ classdef ArCOMObject < handle
             valid = ismember(out,obj.validDataTypes);
             assert(all(valid),['Data type ''%s'' is not currently ' ...
                 'supported by ArCOM.'],out{find(~valid,1)})
-        end
-        
-        function out = isMatlabJava(obj,name)
-            out = false;
-            if obj.isOctave
-                warning('%s not available with GNU/Octave.',name)
-            elseif obj.Interface==1
-                warning('%s not available with PsychToolbox.',name)
-            else
-                out = true;
-            end
         end
     end
 end
