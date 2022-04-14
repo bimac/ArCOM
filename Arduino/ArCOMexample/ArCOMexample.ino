@@ -29,27 +29,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "ArCOM.h"
 ArCOM myUSB(SerialUSB); // Sets ArCOM to wrap SerialUSB (could also be Serial, Serial1, etc.)
-ArCOM Serial1COM(Serial1);        // Wrap Serial1 (UART on Arduino M0, Due + Teensy 3.X)
 short waveform[100] = {0};
 unsigned long timestamps[100] = {0};
 
 void setup() {
-  SerialUSB.begin(115200);
+  SerialUSB.begin(9600);
 }
 
 void loop() {
   if (myUSB.available()) {
-    uint8_t a = myUSB.readUint8();
-    switch(a) {
+    switch(myUSB.readUint8()) {
       case 0: {
-        double tmp = 3.14159265358979311600L;
-        myUSB.writeDouble(tmp);
+        myUSB.writeDouble(3.14159265358979311600L);
         break;
       }
       case 1: {
-        char charBuffer[22];
-        sprintf(charBuffer,"%1.20Lf",3.14159265358979311600L);
-        myUSB.writeCharArray(charBuffer,22);
+        char charBuffer[18];
+        sprintf(charBuffer,"%1.15Lf",3.14159265358979311600L);
+        myUSB.writeCharArray(charBuffer,18);
         break;
       }
       case 2: {
@@ -58,11 +55,18 @@ void loop() {
       }
       case 3: {
         double f = myUSB.readDouble();
-        char charBuffer[22];
-        sprintf(charBuffer,"%1.20lf",f);
-        myUSB.writeCharArray(charBuffer,22);
+        char charBuffer[18];
+        sprintf(charBuffer,"%1.15f",f);
+        myUSB.writeCharArray(charBuffer,18);
         break;
       }
+      case 4: {
+        myUSB.writeFloat(3.14159265358979311600L);
+        break;
+      }
+      case 42:
+        myUSB.writeUint8(42);
+        break;
     }
   }
   // if (myUSB.available()) { // Wait for MATLAB to send data
