@@ -15,12 +15,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /* This example code receives 100 16-bit signed integers and 100 32-bit unsigned integers, modifies them, and returns them to MATLAB.
-   In MATLAB, use: 
+   In MATLAB, use:
    Port = ArCOMObject('COM13', 115200);
    Port.write(sin(.1*(1:100))*10000), 'int16', 100001:100100, 'uint32'); % Write 16-bit sine wave, then 32-bit timestamps
    [wave, times] = Port.read(100, 'int16', 100, 'uint32'); % Read 100 signed 16-bit samples, then 200 unsigned 32-bit times
    clear Port; % clear the Object (releases the port)
-   
+
    Or in Python, use:
    from ArCOM import ArCOMObject
    Port = ArCOMObject('COM13', 115200)
@@ -34,14 +34,36 @@ short waveform[100] = {0};
 unsigned long timestamps[100] = {0};
 
 void setup() {
-  Serial1.begin(1312500);    
   SerialUSB.begin(115200);
 }
 
 void loop() {
   if (myUSB.available()) {
-    myUSB.readUint8();
-    myUSB.writeDouble(M_PI);
+    uint8_t a = myUSB.readUint8();
+    switch(a) {
+      case 0: {
+        double tmp = 3.14159265358979311600L;
+        myUSB.writeDouble(tmp);
+        break;
+      }
+      case 1: {
+        char charBuffer[22];
+        sprintf(charBuffer,"%1.20Lf",3.14159265358979311600L);
+        myUSB.writeCharArray(charBuffer,22);
+        break;
+      }
+      case 2: {
+        myUSB.writeDouble(myUSB.readDouble());
+        break;
+      }
+      case 3: {
+        double f = myUSB.readDouble();
+        char charBuffer[22];
+        sprintf(charBuffer,"%1.20lf",f);
+        myUSB.writeCharArray(charBuffer,22);
+        break;
+      }
+    }
   }
   // if (myUSB.available()) { // Wait for MATLAB to send data
   //   myUSB.readInt16Array(waveform, 100); // Read 100 16-bit signed integers (e.g. a waveform)
