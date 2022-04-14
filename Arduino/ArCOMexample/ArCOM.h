@@ -128,19 +128,8 @@ private:
   Stream *ArCOMstream;
 };
 
-// #if __SIZEOF_DOUBLE__ == 4
-// //   #include <IEEE754tools.h>
-//   template<> inline double ArCOM::read<double>() {
-//     uint8_t tmp[8] = {};
-//     readUint8Array(tmp,8);
-//     //float data = doublePacked2Float(tmp, LSBFIRST);
-//     float data = M_PI;
-//     return data;
-//   }
-
-//   template<> inline void ArCOM::write<double>(double data) {
-//     uint8_t tmp[8] = {};
-//     //float2DoublePacked((float) data, tmp, LSBFIRST);
-//     writeUint8Array(tmp,8);
-//   }
-// #endif
+// Template specializations for boards with 4-byte "doubles"
+#if __SIZEOF_DOUBLE__ != 8
+  template<> double ArCOM::read<double>();
+  template<> void ArCOM::write<double>(double data);
+#endif

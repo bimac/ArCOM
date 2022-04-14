@@ -29,3 +29,21 @@ bool ArCOM::available() {
 void ArCOM::flush() {
   ArCOMstream->flush();
 }
+
+// Template specializations for boards with 4-byte "doubles"
+#if __SIZEOF_DOUBLE__ == 4
+  #include <IEEE754tools.h>
+
+  template<> double ArCOM::read<double>() {
+    uint8_t tmp[8] = {};
+    readUint8Array(tmp,8);
+    float data = doublePacked2Float(tmp, LSBFIRST);
+    return data;
+  }
+
+  template<> void ArCOM::write<double>(double data) {
+    uint8_t tmp[8] = {};
+    float2DoublePacked((float) data, tmp, LSBFIRST);
+    writeUint8Array(tmp,8);
+  }
+#endif
