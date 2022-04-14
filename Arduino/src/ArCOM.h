@@ -39,7 +39,7 @@ public:
     buffer <T>buf;
     buf.data = data;
     for (size_t i = 0; i<sizeof(T); i++)
-      Serial.write(buf.bytes[i]);
+      ArCOMstream->write(buf.bytes[i]);
   }
 
   // Template: Write array
