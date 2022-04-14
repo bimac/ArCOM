@@ -20,7 +20,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // Macro for generating wrapper functions
 // cf. https://www.fluentcpp.com/2017/10/27/function-aliases-cpp/
-#define ALIAS(alias, target) template<typename... Args> inline auto alias(Args&&... args) -> decltype(target(static_cast<Args&&>(args)...)) { return target(static_cast<Args&&>(args)...); }
+#define ALIAS(alias, target)                      \
+template<typename... Args>                        \
+inline auto alias(Args&&... args) ->              \
+decltype(target(static_cast<Args&&>(args)...)) {  \
+  return target(static_cast<Args&&>(args)...);    \
+}
 
 class ArCOM
 {
