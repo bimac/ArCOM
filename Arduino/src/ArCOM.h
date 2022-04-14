@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // cf. https://www.fluentcpp.com/2017/10/27/function-aliases-cpp/
 #define ALIAS(alias, target) template<typename... Args> inline auto alias(Args&&... args) -> decltype(target(args...)) { return target(args...); }
 
-
 class ArCOM
 {
 public:
@@ -130,6 +129,6 @@ private:
 
 // Template specializations for boards with 4-byte "doubles"
 #if __SIZEOF_DOUBLE__ != 8
-  template<> double ArCOM::read<double>();
-  template<> void ArCOM::write<double>(double data);
+  template<> double ArCOM::read<double>() __attribute__((deprecated("Target does not support 8-byte doubles. Use float instead.")));
+  template<> void ArCOM::write<double>(double data)  __attribute__((deprecated("Target does not support 8-byte doubles. Use float instead.")));
 #endif
