@@ -53,12 +53,16 @@ classdef ArCOMObject < handle
         baudRate                % Baud rate for serial transmission
     end
 
+    properties (Dependent)
+        bytesAvailable          % Number of bytes available for reading
+    end
+    
     properties (Hidden)
         Port = []               % Port object
     end
-
-    properties (Dependent)
-        bytesAvailable          % Number of bytes available for reading
+    
+    properties (Dependent, Hidden)
+        BytesAvailableFcn = '' 	% Bytes available callback function
     end
 
     properties (Access = private)
@@ -69,6 +73,7 @@ classdef ArCOMObject < handle
         validDataTypes = ...    % List of supported data-types
             {'int8','uint8','char','int16','uint16',...
             'int32','uint32','int64','uint64','logical','single','double'};
+        BytesAvailableFcnCount = 64 % Number of bytes of data to trigger callback
         inputBuffer = 1E5;      % Size of input buffer
         outputBuffer = 1E5;     % Size of output buffer
         timeout = 1;            % Serial timeout in seconds
@@ -79,7 +84,7 @@ classdef ArCOMObject < handle
     end
 
     methods
-        function obj = ArCOMObject(portString, baudRate, forceOption)
+        function obj = ArCOMObject(portString, baudRate, forceOption, varargin)
 
             % Obtain information on the current system
             [~,~,tmp] = computer;
@@ -141,7 +146,7 @@ classdef ArCOMObject < handle
             end
 
             % Validate manual choice of interface
-            if exist('forceOption','var')
+            if exist('forceOption','var') && ~isempty(forceOption)
                 forceOption = validatestring(lower(forceOption),...
                     {'java','psychtoolbox'},'','FORCEOPTION');
             else
@@ -167,17 +172,47 @@ classdef ArCOMObject < handle
                     obj.Interface = 3;  % MATLAB serialport interface
                 end
             end
+            
+            % Validate additional options
+            if mod(numel(varargin),2)
+                error('Incorrect number of arguments')
+            end
+            if numel(varargin)>1
+                argnames = varargin(1:2:end);
+                argvals  = varargin(2:2:end);
+                for ii = 1:numel(argnames)
+                    validateattributes(argnames{ii},{'string','char'},{'row'})
+                    switch(lower(argnames{ii}))
+                        case 'outputbuffersize'
+                            obj.outputBuffer = argvals{ii};
+                        case 'inputbuffersize'
+                            obj.inputBuffer = argvals{ii};
+                        case 'timeout'
+                            obj.timeout = argvals{ii};
+                        case 'bytesavailablefcn'
+                            obj.BytesAvailableFcn = argvals{ii};
+                        case 'bytesavailablefcncount'
+                            obj.BytesAvailableFcnCount = argvals{ii};
+                        otherwise
+                            error('Unknown parameter: ''%s''.',argnames{ii})
+                    end
+                end
+            end
+            
 
             % Initialize serial interface
             switch obj.Interface
                 case 0  % MATLAB (deprecated serial interface)
                     obj.Port = serial(portString, ...
-                        'BaudRate',             obj.baudRate, ...
-                        'Timeout',              obj.timeout, ...
-                        'OutputBufferSize',     obj.outputBuffer, ...
-                        'InputBufferSize',      obj.inputBuffer, ...
-                        'DataTerminalReady',    'on', ...
-                        'Tag',                  'ArCOM'); %#ok<*SERIAL>
+                        'BaudRate',                 obj.baudRate, ...
+                        'Timeout',                  obj.timeout, ...
+                        'OutputBufferSize',         obj.outputBuffer, ...
+                        'InputBufferSize',          obj.inputBuffer, ...
+                        'BytesAvailableFcn',        obj.BytesAvailableFcn, ...
+                        'BytesAvailableFcnCount',   obj.BytesAvailableFcnCount, ...
+                        'BytesAvailableFcnMode',    'Byte', ...
+                        'DataTerminalReady',        'on', ...
+                        'Tag',                      'ArCOM'); %#ok<*SERIAL>
                     fopen(obj.Port);
                     obj.writeFcn = @(data) fwrite(obj.Port,data,'uint8');
                     obj.readFcn = @(nBytes) fread(obj.Port,nBytes,'uint8');
@@ -219,6 +254,10 @@ classdef ArCOMObject < handle
                     obj.readFcn = @(nBytes) read(obj.Port,nBytes,'uint8');
                     obj.flushFcn = @() flush(obj.Port);
                     obj.getBytesAvailableFcn = @() obj.Port.NumBytesAvailable;
+                    if ~obj.isOctave
+                        configureCallback(obj.Port,'Byte',...
+                            obj.BytesAvailableFcnCount,obj.BytesAvailableFcn)
+                    end
             end
 
             pause(.2);
@@ -229,6 +268,25 @@ classdef ArCOMObject < handle
             out = obj.getBytesAvailableFcn();
         end
 
+        function out = get.BytesAvailableFcn(obj)
+            out = '';
+            if obj.isMatlabJava('BytesAvailableFcn') && ~isempty(obj.Port)
+                out = obj.Port.BytesAvailableFcn;
+            end
+        end
+        
+        function set.BytesAvailableFcn(obj,in)
+            if obj.isMatlabJava('BytesAvailableFcn')
+                switch obj.Interface
+                    case 0
+                        obj.Port.BytesAvailableFcn = in;
+                    case 3
+                        configureCallback(obj.Port,"byte",...
+                            obj.BytesAvailableFcnCount,in)
+                end
+            end
+        end
+        
         function flush(obj)
             obj.flushFcn();
         end
@@ -358,6 +416,17 @@ classdef ArCOMObject < handle
             valid = ismember(out,obj.validDataTypes);
             assert(all(valid),['Data type ''%s'' is not currently ' ...
                 'supported by ArCOM.'],out{find(~valid,1)})
+        end
+        
+        function out = isMatlabJava(obj,name)
+            out = false;
+            if obj.isOctave
+                warning('%s not available with GNU/Octave.',name)
+            elseif obj.Interface==1
+                warning('%s not available with PsychToolbox.',name)
+            else
+                out = true;
+            end
         end
     end
 end

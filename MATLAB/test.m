@@ -1,5 +1,5 @@
 clc
-a = ArCOMObject();
+a = ArCOMObject([],[],'java');
 
 x = pi;
 
