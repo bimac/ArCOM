@@ -20,12 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // Macro for generating wrapper functions
 // cf. https://www.fluentcpp.com/2017/10/27/function-aliases-cpp/
-#define ALIAS(alias, target) \
-template<typename... Args> \
-inline auto alias(Args&&... args) -> decltype(target(std::forward<Args>(args)...)) \
-{ \
-  return target(std::forward<Args>(args)...); \
-}
+#define ALIAS(alias, target) template<typename... Args> inline auto alias(Args&&... args) -> decltype(target(args...)) { return target(args...); }
+
 
 class ArCOM
 {
@@ -35,7 +31,7 @@ public:
   ArCOM(Stream &s);
 
   // Serial functions
-  unsigned int available();
+  bool available();
   void flush();
 
   // Template: Write scalar

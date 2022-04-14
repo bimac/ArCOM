@@ -22,7 +22,7 @@ ArCOM::ArCOM(Stream &s) {
   ArCOMstream = &s;  // Sets the interface (Serial, Serial1, SerialUSB, etc.)
 }
 
-unsigned int ArCOM::available() {
+bool ArCOM::available() {
   return ArCOMstream->available();
 }
 
