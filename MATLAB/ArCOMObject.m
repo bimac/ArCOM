@@ -62,7 +62,7 @@ classdef ArCOMObject < handle
     end
     
     properties (Dependent, Hidden)
-        BytesAvailableFcn = '' 	% Bytes available callback function
+        BytesAvailableFcn       % Bytes available callback function
     end
 
     properties (Access = private)
