@@ -359,6 +359,9 @@ classdef ArCOMObject < handle
             % Read serial data
             data = uint8(obj.readFcn(nBytesTotal));
             assert(~isempty(data),'The serial port returned 0 bytes.')
+            
+            % Ensure data is returned as a row vector
+            data = reshape(data,1,[]);
 
             % Split data & return cast
             varargout = cell(1,nArrays);
