@@ -6,7 +6,7 @@
     "repository":
     {
       "type": "git",
-      "url": "https://github.com/sanworks/ArCOM.git"
+      "url": "https://github.com/bimac/ArCOM.git"
     },
     "build":
     {
@@ -20,7 +20,17 @@
       },
       {
         "name": "Florian Rau",
-        "url": "https://github.com/bimac"
+        "url": "https://github.com/bimac",
+        "maintainer": true
+      }
+    ],
+    "examples": [
+      {
+          "name": "ArCOMexample",
+          "base": "Arduino/ArCOMexample",
+          "files": [
+              "ArCOMexample.ino"
+          ]
       }
     ],
     "license": "GPLv3",
