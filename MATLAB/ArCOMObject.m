@@ -269,7 +269,11 @@ classdef ArCOMObject < handle
         function out = get.BytesAvailableFcn(obj)
             assert(~obj.isOctave,   'BytesAvailableFcn is not available with GNU/Octave.')
             assert(obj.Interface~=1,'BytesAvailableFcn is not available with PsychToolbox.')
-            out = obj.Port.BytesAvailableFcn;
+            if isempty(obj.Port)
+                out = '';
+            else
+                out = obj.Port.BytesAvailableFcn;
+            end
         end
         
         function set.BytesAvailableFcn(obj,in)
@@ -279,7 +283,12 @@ classdef ArCOMObject < handle
                 case 0
                     obj.Port.BytesAvailableFcn = in;
                 case 3
-                    configureCallback(obj.Port,"byte",obj.BytesAvailableFcnCount,in)
+                    if isempty(in)
+                        configureCallback(obj.Port,'off')
+                    else
+                        configureCallback(obj.Port,'byte',...
+                            obj.BytesAvailableFcnCount,in)
+                    end
             end
         end
         
