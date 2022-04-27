@@ -37,46 +37,14 @@ void setup() {
 }
 
 void loop() {
-  if (myUSB.available()) {
-    switch(myUSB.readUint8()) {
-      case 0: {
-        myUSB.writeDouble(3.14159265358979311600L);
-        break;
-      }
-      case 1: {
-        char charBuffer[18];
-        sprintf(charBuffer,"%1.15Lf",3.14159265358979311600L);
-        myUSB.writeCharArray(charBuffer,18);
-        break;
-      }
-      case 2: {
-        myUSB.writeDouble(myUSB.readDouble());
-        break;
-      }
-      case 3: {
-        double f = myUSB.readDouble();
-        char charBuffer[18];
-        sprintf(charBuffer,"%1.15f",f);
-        myUSB.writeCharArray(charBuffer,18);
-        break;
-      }
-      case 4: {
-        myUSB.writeFloat(3.14159265358979311600L);
-        break;
-      }
-      case 42:
-        myUSB.writeUint8(42);
-        break;
+  if (myUSB.available()) { // Wait for MATLAB to send data
+    myUSB.readInt16Array(waveform, 100); // Read 100 16-bit signed integers (e.g. a waveform)
+    myUSB.readUint32Array(timestamps, 100); // Read 100 32-bit unsigned integers (e.g. timing data)
+    for (int i = 0; i < 100; i++) {
+      waveform[i] = waveform[i]-1; // Modify each waveform sample
+      timestamps[i] = timestamps[i]+1; // Modify each timestamp
     }
+    myUSB.writeInt16Array(waveform, 100); // Write 100 16-bit signed integers
+    myUSB.writeUint32Array(timestamps, 100); // Write 100 32-bit unsigned integers (e.g. timing data)
   }
-  // if (myUSB.available()) { // Wait for MATLAB to send data
-  //   myUSB.readInt16Array(waveform, 100); // Read 100 16-bit signed integers (e.g. a waveform)
-  //   myUSB.readUint32Array(timestamps, 100); // Read 100 32-bit unsigned integers (e.g. timing data)
-  //   for (int i = 0; i < 100; i++) {
-  //     waveform[i] = waveform[i]-1; // Modify each waveform sample
-  //     timestamps[i] = timestamps[i]+1; // Modify each timestamp
-  //   }
-  //   myUSB.writeInt16Array(waveform, 100); // Write 100 16-bit signed integers
-  //   myUSB.writeUint32Array(timestamps, 100); // Write 100 32-bit unsigned integers (e.g. timing data)
-  // }
 }
