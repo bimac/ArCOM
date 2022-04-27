@@ -37,30 +37,34 @@ public:
   // Serial functions
   bool available();
   void flush();
+  void write_now();
 
   // Template: Write scalar
   template<typename T> void write(T data) {
     buffer <T>buf;
     buf.data = data;
-    ArCOMstream->write(buf.bytes,sizeof(T));
+    ArCOMstream->write(buf.bytes, sizeof(T));
   }
 
   // Template: Write array
-  template<typename T> void write(T *data, size_t nValues) {
-    for (uint16_t i = 0; i < nValues; i++)
+  template<typename T> void write(T *data, uint16_t nValues) {
+    for (uint16_t i=0; i<nValues; i++)
       write<T>(data[i]);
   }
 
   // Template: Read scalar
   template<typename T> T read() {
     buffer <T>buf;
-    ArCOMstream->readBytes(buf.bytes,sizeof(T));
+    for (size_t i = 0; i<sizeof(T); i++) {
+      while (ArCOMstream->available() == 0) {}
+      buf.bytes[i] = ArCOMstream->read();
+    }
     return buf.data;
   }
 
   // Template: Read array
-  template<typename T> void read(T *data, size_t nValues) {
-    for (uint16_t i = 0; i < nValues; i++)
+  template<typename T> void read(T *data, uint16_t nValues) {
+    for (uint16_t i=0; i<nValues; i++)
       data[i] = read<T>();
   }
 
