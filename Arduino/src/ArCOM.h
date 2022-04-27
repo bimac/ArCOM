@@ -42,8 +42,7 @@ public:
   template<typename T> void write(T data) {
     buffer <T>buf;
     buf.data = data;
-    for (size_t i = 0; i<sizeof(T); i++)
-      ArCOMstream->write(buf.bytes[i]);
+    ArCOMstream->write(buf.bytes,sizeof(T));
   }
 
   // Template: Write array
@@ -55,10 +54,7 @@ public:
   // Template: Read scalar
   template<typename T> T read() {
     buffer <T>buf;
-    for (size_t i = 0; i<sizeof(T); i++) {
-      while (ArCOMstream->available() == 0) {}
-      buf.bytes[i] = ArCOMstream->read();
-    }
+    ArCOMstream->readBytes(buf.bytes,sizeof(T));
     return buf.data;
   }
 
