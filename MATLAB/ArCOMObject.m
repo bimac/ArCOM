@@ -115,7 +115,7 @@ classdef ArCOMObject < handle
                 elseif exist('seriallist','file')
                     if obj.isOctave
                         if isunix
-                            tmp = strcat('/dev/',seriallist);
+                            tmp = strcat('/dev/',seriallist); %#ok<*SERLL> 
                         else
                             tmp = seriallist;
                         end
@@ -158,9 +158,9 @@ classdef ArCOMObject < handle
                 obj.Interface = 1;      % PsychToolbox interface
             elseif obj.isOctave
                 tmp = instrhwinfo().SupportedInterfaces;
-                if any(~cellfun(@isempty,strfind(tmp,'serialport'))) %#ok<STRCLFH>
+                if any(~cellfun(@isempty,strfind(tmp,'serialport'))) %#ok<*STRCLFH> 
                     obj.Interface = 3;  % Octave serialport interface
-                elseif any(~cellfun(@isempty,strfind(tmp,'serial'))) %#ok<STRCLFH>
+                elseif any(~cellfun(@isempty,strfind(tmp,'serial')))
                     obj.Interface = 2;  % Octave serial interface
                 else
                     error('Serial communication is not supported on your platform.');
