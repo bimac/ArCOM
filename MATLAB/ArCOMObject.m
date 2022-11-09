@@ -110,21 +110,7 @@ classdef ArCOMObject < handle
 
             % Try to guess portString / validate argument
             if ~exist('portString','var') || isempty(portString)
-                if exist('serialportlist','file')
-                    tmp = sort(serialportlist('available'));
-                elseif exist('seriallist','file')
-                    if obj.isOctave
-                        if isunix
-                            tmp = strcat('/dev/',seriallist); %#ok<*SERLL> 
-                        else
-                            tmp = seriallist;
-                        end
-                    else
-                        tmp = sort(seriallist('available'));
-                    end
-                else
-                    tmp = [];
-                end
+                tmp = ArCOMObject.seriallist;
                 assert(~isempty(tmp),'No serial port available.')
                 assert(numel(tmp)==1,['Multiple serial ports are available. ' ...
                     'Please provide a serial port argument to initialize ArCOM.\n' ...
@@ -161,9 +147,9 @@ classdef ArCOMObject < handle
                 obj.Interface = 1;      % PsychToolbox interface
             elseif obj.isOctave
                 tmp = instrhwinfo().SupportedInterfaces;
-                if any(~cellfun(@isempty,strfind(tmp,'serialport'))) %#ok<*STRCLFH> 
+                if any(~cellfun(@isempty,strfind(tmp,'serialport'))) %#ok<STRCLFH>
                     obj.Interface = 3;  % Octave serialport interface
-                elseif any(~cellfun(@isempty,strfind(tmp,'serial')))
+                elseif any(~cellfun(@isempty,strfind(tmp,'serial'))) %#ok<STRCLFH>
                     obj.Interface = 2;  % Octave serial interface
                 else
                     error('Serial communication is not supported on your platform.');
@@ -428,6 +414,29 @@ classdef ArCOMObject < handle
             valid = ismember(out,obj.validDataTypes);
             assert(all(valid),['Data type ''%s'' is not currently ' ...
                 'supported by ArCOM.'],out{find(~valid,1)})
+        end
+    end
+    
+    methods (Static)
+      	function out = seriallist()
+            if exist('serialportlist','file')
+                out = sort(serialportlist('available'));
+            elseif exist('seriallist','file')
+                if obj.isOctave
+                    if isunix
+                        out = strcat('/dev/',seriallist);
+                    else
+                        out = seriallist;
+                    end
+                else
+                    out = sort(seriallist('available'));
+                end
+            else
+                out = [];
+            end
+            if strcmp(computer,'GLNXA64')
+                out = out(~cellfun(@isempty,regexp(out,"^/dev/ttyACM")));
+            end
         end
     end
 end

@@ -1,0 +1,48 @@
+{
+"_schemaVersion": "1.0.0",
+"ArCOMObject":
+{
+    "inputs": [
+        {
+            "name": "Port",
+            "kind": "required",
+            "type": "choices = ArCOMObject.seriallist()"
+        },
+        {
+            "name": "BaudRate",
+            "kind": "required",
+            "type": [ "double", ">=0" ]
+        },
+        {
+            "name": "ForceOption",
+            "kind": "required",
+            "type": "choices = {'java', 'psychtoolbox'}"
+        },
+        {
+            "name": "outputbuffersize",
+            "kind": "namevalue",
+            "type": "double"
+        },
+        {
+            "name": "inputbuffersize",
+            "kind": "namevalue",
+            "type": "double"
+        },
+        {
+            "name": "timeout",
+            "kind": "namevalue",
+            "type": "double"
+        },
+        {
+            "name": "bytesavailablefcn",
+            "kind": "namevalue",
+            "type": [ "function_handle", "scalar" ]
+        },
+        {
+            "name": "bytesavailablefcncount",
+            "kind": "namevalue",
+            "type": [ "integer", "scalar", ">0" ]
+        }
+    ]
+}
+}
