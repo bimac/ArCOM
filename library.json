@@ -1,6 +1,6 @@
 {
     "name": "ArCOM",
-    "version": "2.0.0",
+    "version": "2.1.0",
     "description": "An interface to simplify data transactions between Arduino and MATLAB/GNU Octave",
     "keywords": "ArCOM, Bpod, Arduino, MATLAB, Octave, Python",
     "repository":
@@ -12,6 +12,15 @@
     {
         "srcDir": "Arduino/src"
     },
+    "dependencies":
+    [
+      {
+        "owner": "robtillaart",
+        "name": "IEEE754tools",
+        "version": "^0.2.8",
+        "platforms": ["atmelavr", "atmelmegaavr"]
+      }
+    ],
     "authors":
     [
       {
@@ -27,9 +36,16 @@
     "examples": [
       {
           "name": "ArCOMexample",
-          "base": "Arduino/ArCOMexample",
+          "base": "Arduino/examples/ArCOMexample",
           "files": [
               "ArCOMexample.ino"
+          ]
+      },
+      {
+          "name": "FloatsAndDoubles",
+          "base": "Arduino/examples/FloatsAndDoubles",
+          "files": [
+              "FloatsAndDoubles.ino"
           ]
       }
     ],

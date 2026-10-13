@@ -29,43 +29,45 @@ decltype(target(static_cast<Args&&>(args)...)) {  \
 
 class ArCOM
 {
+  // Used for restricting the templated constructor to classes derived from
+  // Stream (needs to be declared ahead of the constructor)
+  static void isStream(Stream *);
+
 public:
 
-  // Constructor
-  ArCOM(Stream &s);
+  // Constructor: sets the interface (Serial, Serial1, SerialUSB, etc.)
+  ArCOM(Stream &s) : ArCOMstream(&s), readBytesFn(&readBytesImpl<Stream>) {}
+
+  // Constructor for classes derived from Stream: binds to the readBytes() of
+  // that class, which may be faster than the one of Stream
+  template<typename S, typename = decltype(isStream((S *) nullptr))>
+  ArCOM(S &s) : ArCOMstream(&s), readBytesFn(&readBytesImpl<S>) {}
 
   // Serial functions
-  bool available();
+  unsigned int available();
   void flush();
-  void write_now();
+  Stream &stream() { return *ArCOMstream; }
 
   // Template: Write scalar
   template<typename T> void write(T data) {
-    buffer <T>buf;
-    buf.data = data;
-    ArCOMstream->write(buf.bytes, sizeof(T));
+    ArCOMstream->write(reinterpret_cast<const uint8_t *>(&data), sizeof(T));
   }
 
-  // Template: Write array
-  template<typename T> void write(T *data, uint16_t nValues) {
-    for (uint16_t i=0; i<nValues; i++)
-      write<T>(data[i]);
+  // Template: Write array (raw bytes, does not make use of write<T>())
+  template<typename T> void write(const T *data, size_t nValues) {
+    writeChunked(reinterpret_cast<const uint8_t *>(data), nValues * sizeof(T));
   }
 
   // Template: Read scalar
   template<typename T> T read() {
-    buffer <T>buf;
-    for (size_t i = 0; i<sizeof(T); i++) {
-      while (ArCOMstream->available() == 0) {}
-      buf.bytes[i] = ArCOMstream->read();
-    }
-    return buf.data;
+    T data;
+    readBlocking(reinterpret_cast<uint8_t *>(&data), sizeof(T));
+    return data;
   }
 
-  // Template: Read array
-  template<typename T> void read(T *data, uint16_t nValues) {
-    for (uint16_t i=0; i<nValues; i++)
-      data[i] = read<T>();
+  // Template: Read array (raw bytes, does not make use of read<T>())
+  template<typename T> void read(T *data, size_t nValues) {
+    readBlocking(reinterpret_cast<uint8_t *>(data), nValues * sizeof(T));
   }
 
   // Wrapper functions for backwards-compatibility (read scalar)
@@ -125,15 +127,58 @@ public:
   ALIAS(writeDoubleArray, write<double>)
 
 private:
-  template<typename T> union buffer {
-    T data;
-    uint8_t bytes[sizeof(T)];
-  };
   Stream *ArCOMstream;
+  size_t (*readBytesFn)(Stream *, uint8_t *, size_t);
+
+  template<typename S> static size_t readBytesImpl(Stream *s, uint8_t *data, size_t nBytes) {
+    return static_cast<S *>(s)->readBytes((char *) data, nBytes);
+  }
+
+  // Writes in chunks, as some cores cannot send large buffers in a single
+  // call of write() (e.g., SAMD: 16384 bytes). The chunk size is kept well
+  // below that; it has no measurable effect on throughput.
+  void writeChunked(const uint8_t *data, size_t nBytes) {
+    const size_t chunkSize = 1024;
+    while (nBytes > 0) {
+      size_t nWrite = min(nBytes, chunkSize);
+      ArCOMstream->write(data, nWrite);
+      data += nWrite;
+      nBytes -= nWrite;
+    }
+  }
+
+  // Blocks until all bytes have been read. The first byte is obtained by
+  // means of read(), which also returns a byte held back by peek() (SAMD).
+  // The rest is read in bulk, but only as far as available: readBytes() does
+  // not have to wait and never runs into its timeout.
+  void readBlocking(uint8_t *data, size_t nBytes) {
+    while (nBytes > 0) {
+      int c = ArCOMstream->read();
+      if (c < 0) {
+        ArCOMstream->available();  // some cores yield / service USB in here
+        continue;
+      }
+      *data++ = c;
+      if (--nBytes == 0)
+        return;
+      int nAvailable = ArCOMstream->available();
+      if (nAvailable > 0) {
+        size_t nRead = readBytesFn(ArCOMstream, data, min((size_t) nAvailable, nBytes));
+        data += nRead;
+        nBytes -= nRead;
+      }
+    }
+  }
 };
+
+#undef ALIAS
 
 // Template specializations for boards with 4-byte "doubles"
 #if __SIZEOF_DOUBLE__ != 8
-  template<> double ArCOM::read<double>() __attribute__((deprecated("Target does not support 8-byte doubles. Use float instead.")));
-  template<> void ArCOM::write<double>(double data)  __attribute__((deprecated("Target does not support 8-byte doubles. Use float instead.")));
+  #define ARCOM_NO_DOUBLE __attribute__((deprecated("Target does not support 8-byte doubles. Use float instead.")))
+  template<> double ArCOM::read<double>() ARCOM_NO_DOUBLE;
+  template<> void ArCOM::read<double>(double *data, size_t nValues) ARCOM_NO_DOUBLE;
+  template<> void ArCOM::write<double>(double data) ARCOM_NO_DOUBLE;
+  template<> void ArCOM::write<double>(const double *data, size_t nValues) ARCOM_NO_DOUBLE;
+  #undef ARCOM_NO_DOUBLE
 #endif
