@@ -2,6 +2,7 @@
 ArCOM
 Copyright (C) 2016 Sanworks LLC, Sound Beach, New York, USA
 Copyright (C) 2022 Florian Rau
+Copyright (C) 2026 International Brain Laboratory
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
