@@ -15,6 +15,13 @@ the `version` field in `library.json`.
   with. Construct ArCOM from the serial object itself (`ArCOM COM(Serial);`)
   to benefit; constructing it from a `Stream &` works, but uses the slower
   generic implementation.
+- On boards with 4-byte doubles (AVR), using `double` with ArCOM is now a
+  compile error: use `float` instead. The conversion used in 2.0.0 gave wrong
+  results for 0, infinity, NaN and out-of-range values, and the dependency on
+  IEEE754tools is gone.
+- On Teensy 3.x, LC and 4.x, reads from USB serial use the core's
+  `usb_serial_read()` directly. On Teensy 4, values read one at a time (e.g.
+  `readUint32()`) are about 2.5 times faster.
 - Measured on Teensy 4.1: array reads 5 -> 33 MB/s, byte-array writes
   5 -> 41 MB/s. On SAMD21: array reads 0.1 -> 1.1 MB/s.
 
@@ -23,7 +30,8 @@ the `version` field in `library.json`.
 - `stream()` returns the wrapped `Stream`, e.g. for `print()` or `peek()`.
 - Array writes accept `const` data, so constant tables and string literals
   can be sent directly.
-- Array reads and writes of `double` on boards with 4-byte doubles.
+- Sending or receiving pointers is a compile error, e.g. `write("hello")`
+  without a number of values; it used to send the address.
 
 ### Fixed
 
@@ -31,11 +39,23 @@ the `version` field in `library.json`.
 - Writes of more than 16384 bytes sent nothing on SAMD boards.
 - A read following `peek()` could hang (SAMD).
 - Reads no longer set the stream's read-error flag when the host pauses for
-  longer than the stream timeout, and no longer stop `yield()` from running
-  while waiting (Teensy).
-- Removed `write_now()`, which was declared but never implemented.
+  longer than the stream timeout (Teensy).
+- Reads call `yield()` while waiting for data, also on boards whose
+  `available()` does not (e.g. SAMD, Due), so that e.g. the Scheduler library
+  keeps running.
+- A stream whose `readBytes()` returns an invalid count (e.g. an error code)
+  can no longer make a read write past the end of the buffer.
+- The previous function names (`writeUint32()`, ...) take their arguments by
+  value again, so bit-fields and members of packed structs can be passed, as
+  in 1.0.0.
+- Including `ArCOM.h` no longer redefines and removes a macro called `ALIAS`.
+- Stream classes without an accessible `readBytes(char *, size_t)` failed to
+  compile; they now use the generic implementation.
 - `ArCOMexample` did not compile for AVR boards.
-- `library.json`: example paths, and the IEEE754tools dependency for AVR.
+
+### Removed
+
+- `write_now()`, which was declared but never implemented.
 
 ## [2.0.0] - 2022-11-17
 
@@ -43,15 +63,16 @@ the `version` field in `library.json`.
 
 - Rewritten around the templates `read<T>()` and `write<T>()`. The previous
   function names (`readUint16()`, `writeByteArray()`, ...) remain available.
-- Examples moved to `Arduino/examples`.
 
 ### Added
 
 - 64-bit integers, `float` and `double`.
+- Structs (and arrays of them) can be sent and received in one call, e.g.
+  `write(sample)` and `read<Sample>()`. Declare them
+  `__attribute__((packed))` so that no padding is transferred.
 - On boards with 4-byte doubles (AVR), doubles are converted to and from the
   8-byte format on the wire; using them there produces a deprecation warning.
 - PlatformIO support (`platformio.ini`, `library.json`).
-- `FloatsAndDoubles` example.
 
 ## [1.0.0]
 

@@ -12,15 +12,6 @@
     {
         "srcDir": "Arduino/src"
     },
-    "dependencies":
-    [
-      {
-        "owner": "robtillaart",
-        "name": "IEEE754tools",
-        "version": "^0.2.8",
-        "platforms": ["atmelavr", "atmelmegaavr"]
-      }
-    ],
     "authors":
     [
       {
@@ -36,16 +27,9 @@
     "examples": [
       {
           "name": "ArCOMexample",
-          "base": "Arduino/examples/ArCOMexample",
+          "base": "Arduino/ArCOMexample",
           "files": [
               "ArCOMexample.ino"
-          ]
-      },
-      {
-          "name": "FloatsAndDoubles",
-          "base": "Arduino/examples/FloatsAndDoubles",
-          "files": [
-              "FloatsAndDoubles.ino"
           ]
       }
     ],

@@ -1,26 +1,31 @@
 /*
-ArCOM
+----------------------------------------------------------------------------
+
+This file is part of the Sanworks ArCOM repository
 Copyright (C) 2016 Sanworks LLC, Sound Beach, New York, USA
+
+----------------------------------------------------------------------------
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, version 3.
 
-This program is distributed  WITHOUT ANY WARRANTY and without even the
-implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed  WITHOUT ANY WARRANTY and without even the 
+implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
 See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 */
 
 /* This example code receives 100 16-bit signed integers and 100 32-bit unsigned integers, modifies them, and returns them to MATLAB.
-   In MATLAB, use:
+   In MATLAB, use: 
    Port = ArCOMObject('COM13', 115200);
    Port.write(sin(.1*(1:100))*10000), 'int16', 100001:100100, 'uint32'); % Write 16-bit sine wave, then 32-bit timestamps
    [wave, times] = Port.read(100, 'int16', 100, 'uint32'); % Read 100 signed 16-bit samples, then 200 unsigned 32-bit times
    clear Port; % clear the Object (releases the port)
-
+   
    Or in Python, use:
    from ArCOM import ArCOMObject
    Port = ArCOMObject('COM13', 115200)
@@ -33,7 +38,7 @@ int16_t waveform[100] = {0};
 uint32_t timestamps[100] = {0};
 
 void setup() {
-  SerialUSB.begin(9600);
+  SerialUSB.begin(115200);
 }
 
 void loop() {
