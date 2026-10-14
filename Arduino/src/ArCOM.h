@@ -229,12 +229,27 @@ private:
 
 #undef ARCOM_ALIAS
 
-#if defined(TEENSYDUINO) && defined(__arm__) && defined(USB_SERIAL_DTR) && F_CPU >= 20000000
-// USB serial of Teensy 3.x, LC and 4.x (USB_SERIAL_DTR is only defined if the
-// USB type includes serial): peek() does not hold bytes back and
-// usb_serial_read() never waits, so it can be used directly. Teensy 4:
-// multi-byte values ~2.5x faster; Teensy 3.5: uint16 values ~1.8x faster.
+// USB serial ports of Teensy 3.x, LC and 4.x: peek() does not hold bytes back
+// and usb_serial*_read() never waits, so it can be used directly (Teensy 4:
+// multi-byte values ~2.5x faster; Teensy 3.5: uint16 values ~1.8x faster).
+// - Below 20 MHz, the Teensy 3 core replaces USB serial with a stub.
+// - USB_SERIAL_DTR is only defined if the USB type includes serial.
+// - SerialUSB1/2 only exist in the dual/triple serial USB types. These are
+//   tested directly, as the Teensy 3 core hides its CDC2/CDC3 macros.
+#if defined(TEENSYDUINO) && defined(__arm__) && F_CPU >= 20000000
+#if defined(USB_SERIAL_DTR)
 template<> inline size_t ArCOM::readSome<usb_serial_class>(Stream *, uint8_t *data, size_t nBytes) {
   return usb_serial_read(data, nBytes);
 }
+#endif
+#if defined(USB_DUAL_SERIAL) || defined(USB_TRIPLE_SERIAL)
+template<> inline size_t ArCOM::readSome<usb_serial2_class>(Stream *, uint8_t *data, size_t nBytes) {
+  return usb_serial2_read(data, nBytes);
+}
+#endif
+#if defined(USB_TRIPLE_SERIAL)
+template<> inline size_t ArCOM::readSome<usb_serial3_class>(Stream *, uint8_t *data, size_t nBytes) {
+  return usb_serial3_read(data, nBytes);
+}
+#endif
 #endif
