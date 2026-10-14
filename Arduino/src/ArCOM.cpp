@@ -4,6 +4,7 @@
 This file is part of the Sanworks ArCOM repository
 Copyright (C) 2017 Sanworks LLC, Stony Brook, New York, USA
 Copyright (C) 2022 Florian Rau
+Copyright (C) 2026 International Brain Laboratory
 
 ----------------------------------------------------------------------------
 
@@ -22,32 +23,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <Arduino.h>
 #include "ArCOM.h"
 
-ArCOM::ArCOM(Stream &s) {
-  ArCOMstream = &s;  // Sets the interface (Serial, Serial1, SerialUSB, etc.)
-}
-
-bool ArCOM::available() {
+unsigned int ArCOM::available() {
   return ArCOMstream->available();
 }
 
 void ArCOM::flush() {
   ArCOMstream->flush();
 }
-
-// Template specializations for boards with 4-byte "doubles"
-#if __SIZEOF_DOUBLE__ == 4
-  #include <IEEE754tools.h>
-
-  template<> double ArCOM::read<double>() {
-    uint8_t tmp[8] = {};
-    readUint8Array(tmp,8);
-    float data = doublePacked2Float(tmp, LSBFIRST);
-    return data;
-  }
-
-  template<> void ArCOM::write<double>(double data) {
-    uint8_t tmp[8] = {};
-    float2DoublePacked((float) data, tmp, LSBFIRST);
-    writeUint8Array(tmp,8);
-  }
-#endif
