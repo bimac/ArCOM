@@ -4,7 +4,7 @@ Changes to the Arduino library of ArCOM. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 the `version` field in `library.json`.
 
-## [2.1.0] - 2026-10-14
+## [2.1.0] - 2026-10-15
 
 ### Changed
 
@@ -19,8 +19,9 @@ the `version` field in `library.json`.
   compile error: use `float` instead. The conversion used in 2.0.0 gave wrong
   results for 0, infinity, NaN and out-of-range values, and the dependency on
   IEEE754tools is gone.
-- On Teensy 3.x, LC and 4.x, reads from USB serial use the core's
-  `usb_serial_read()` directly. On Teensy 4, values read one at a time (e.g.
+- On Teensy 3.x, LC and 4.x, reads from USB serial (including `SerialUSB1`
+  and `SerialUSB2` of the dual and triple serial USB types) use the core's
+  `usb_serial*_read()` directly. On Teensy 4, values read one at a time (e.g.
   `readUint32()`) are about 2.5 times faster.
 - Measured on Teensy 4.1: array reads 5 -> 33 MB/s, byte-array writes
   5 -> 41 MB/s. On SAMD21: array reads 0.1 -> 1.1 MB/s.
@@ -48,6 +49,9 @@ the `version` field in `library.json`.
 - The previous function names (`writeUint32()`, ...) take their arguments by
   value again, so bit-fields and members of packed structs can be passed, as
   in 1.0.0.
+- Array reads and writes accept `volatile` arrays again, as in 1.0.0 (e.g.
+  `readByteArray()` on a `volatile byte[]` in the Bpod state machine
+  firmware); 2.0.0 failed to compile them.
 - Including `ArCOM.h` no longer redefines and removes a macro called `ALIAS`.
 - Stream classes without an accessible `readBytes(char *, size_t)` failed to
   compile; they now use the generic implementation.

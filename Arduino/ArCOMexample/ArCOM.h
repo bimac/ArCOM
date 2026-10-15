@@ -78,9 +78,11 @@ public:
   }
 
   // Template: Write array (raw bytes, does not make use of write<T>())
-  template<typename T> void write(const T *data, size_t nValues) {
+  // Array functions accept volatile arrays
+  template<typename T> void write(const volatile T *data, size_t nValues) {
     checkType<T>();
-    writeChunked(reinterpret_cast<const uint8_t *>(data), nValues * sizeof(T));
+    writeChunked(reinterpret_cast<const uint8_t *>(const_cast<const T *>(data)),
+                 nValues * sizeof(T));
   }
 
   // Template: Read scalar
@@ -92,9 +94,10 @@ public:
   }
 
   // Template: Read array (raw bytes, does not make use of read<T>())
-  template<typename T> void read(T *data, size_t nValues) {
+  template<typename T> void read(volatile T *data, size_t nValues) {
     checkType<T>();
-    readBlocking(reinterpret_cast<uint8_t *>(data), nValues * sizeof(T));
+    readBlocking(reinterpret_cast<uint8_t *>(const_cast<T *>(data)),
+                 nValues * sizeof(T));
   }
 
   // Wrapper functions for backwards-compatibility (read scalar)
